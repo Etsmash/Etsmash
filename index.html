@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Etsmash — Developer Profile</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080b10;
+      --surface:   #0d1117;
+      --border:    #1e2530;
+      --muted:     #3d4a5c;
+      --text:      #c9d1d9;
+      --subtle:    #6e7f96;
+      --accent:    #58a6ff;
+      --accent2:   #7ee787;
+      --glow:      rgba(88,166,255,0.15);
+      --grade-a:   #7ee787;
+      --grade-b:   #58a6ff;
+      --grade-c:   #d29922;
+      --grade-d:   #f0883e;
+      --grade-e:   #f85149;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+      overflow-x: hidden;
+    }
+
+    /* ── Canvas background ── */
+    #canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.45;
+    }
+
+    /* ── Layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+      gap: 1.5rem;
+    }
+
+    /* ── Entrance animation ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    .fade-up:nth-child(1) { animation-delay: 0.1s; }
+    .fade-up:nth-child(2) { animation-delay: 0.25s; }
+    .fade-up:nth-child(3) { animation-delay: 0.4s; }
+    .fade-up:nth-child(4) { animation-delay: 0.55s; }
+    .fade-up:nth-child(5) { animation-delay: 0.7s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Card base ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem 2rem;
+      width: 100%;
+      max-width: 560px;
+      transition: border-color 0.3s;
+    }
+    .card:hover { border-color: var(--muted); }
+
+    /* ── Profile header ── */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: block;
+      background: var(--border);
+      transition: border-color 0.3s;
+    }
+    .avatar-wrap:hover .avatar { border-color: var(--accent); }
+    .avatar-ring {
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--accent);
+      border-right-color: var(--accent);
+      animation: spin 3s linear infinite;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .avatar-wrap:hover .avatar-ring { opacity: 1; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #e6edf3;
+      letter-spacing: -0.02em;
+    }
+    .profile-handle {
+      color: var(--subtle);
+      font-size: 0.8rem;
+      margin-top: 2px;
+    }
+    .profile-bio {
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--subtle);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Rating badge ── */
+    .rating-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .rating-label { font-size: 0.6rem; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.1em; }
+    .rating-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 900;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .rating-badge:hover { transform: scale(1.07); }
+    .rating-badge::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      opacity: 0.08;
+    }
+    .rating-badge.A { color: var(--grade-a); border-color: var(--grade-a); box-shadow: 0 0 16px rgba(126,231,135,0.3); }
+    .rating-badge.B { color: var(--grade-b); border-color: var(--grade-b); box-shadow: 0 0 16px rgba(88,166,255,0.3); }
+    .rating-badge.C { color: var(--grade-c); border-color: var(--grade-c); box-shadow: 0 0 16px rgba(210,153,34,0.3); }
+    .rating-badge.D { color: var(--grade-d); border-color: var(--grade-d); box-shadow: 0 0 16px rgba(240,136,62,0.3); }
+    .rating-badge.E { color: var(--grade-e); border-color: var(--grade-e); box-shadow: 0 0 16px rgba(248,81,73,0.3); }
+
+    /* pulse on load */
+    @keyframes badgePop {
+      0%   { transform: scale(0.5); opacity: 0; }
+      70%  { transform: scale(1.12); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .rating-badge { animation: badgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.9s both; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    .stat-cell {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 0.6rem;
+      text-align: center;
+      transition: border-color 0.3s, transform 0.2s;
+    }
+    .stat-cell:hover { border-color: var(--muted); transform: translateY(-2px); }
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #e6edf3;
+      line-height: 1;
+    }
+    .stat-key {
+      font-size: 0.68rem;
+      color: var(--subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    /* ── Score bar ── */
+    .score-section { display: flex; flex-direction: column; gap: 0.75rem; }
+    .score-row { display: flex; flex-direction: column; gap: 4px; }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--subtle);
+    }
+    .score-header span:last-child { color: var(--text); }
+    .bar-track {
+      height: 5px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      width: 0%;
+      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .bar-fill.repos  { background: linear-gradient(90deg, var(--accent), #79c0ff); }
+    .bar-fill.commits { background: linear-gradient(90deg, var(--accent2), #56d364); }
+    .bar-fill.impact { background: linear-gradient(90deg, #d2a8ff, #a371f7); }
+
+    /* ── Language pills ── */
+    .lang-section { display: flex; flex-direction: column; gap: 0.75rem; }
+    .lang-header { font-size: 0.72rem; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.08em; }
+    .lang-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .lang-pill {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .lang-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Activity streak ── */
+    .streak-section { display: flex; flex-direction: column; gap: 0.75rem; }
+    .streak-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .streak-grid {
+      display: grid;
+      grid-template-columns: repeat(52, 1fr);
+      gap: 2px;
+    }
+    .streak-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background 0.2s, transform 0.15s;
+      cursor: default;
+    }
+    .streak-cell:hover { transform: scale(1.4); }
+    .streak-cell.l1 { background: #0e4429; }
+    .streak-cell.l2 { background: #006d32; }
+    .streak-cell.l3 { background: #26a641; }
+    .streak-cell.l4 { background: #39d353; }
+
+    /* ── Grade breakdown tooltip ── */
+    .grade-info {
+      font-size: 0.68rem;
+      color: var(--subtle);
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .grade-info span { color: var(--text); }
+
+    /* ── Loading skeleton pulse ── */
+    @keyframes skeleton {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.9; }
+    }
+    .skeleton {
+      background: var(--border);
+      border-radius: 4px;
+      animation: skeleton 1.4s ease-in-out infinite;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <main class="page">
+
+    <!-- Profile card -->
+    <div class="card fade-up" id="profile-card">
+      <div class="profile-header">
+        <div class="avatar-wrap">
+          <img class="avatar" id="avatar" src="" alt="avatar" />
+          <div class="avatar-ring"></div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="profile-name"><span class="skeleton" style="display:inline-block;width:120px;height:1em;"></span></div>
+          <div class="profile-handle" id="profile-handle"></div>
+          <div class="profile-bio" id="profile-bio"></div>
+        </div>
+        <div class="rating-wrap">
+          <div class="rating-label">Impact</div>
+          <div class="rating-badge" id="rating-badge">?</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="card fade-up" style="padding:1.25rem 1.5rem;">
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-value" id="stat-repos">—</div>
+          <div class="stat-key">Repos</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value" id="stat-stars">—</div>
+          <div class="stat-key">Stars</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value" id="stat-followers">—</div>
+          <div class="stat-key">Followers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score bars -->
+    <div class="card fade-up">
+      <div class="score-section">
+        <div class="score-row">
+          <div class="score-header"><span>Repositories</span><span id="score-repos-val">—</span></div>
+          <div class="bar-track"><div class="bar-fill repos" id="bar-repos"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-header"><span>Commit Activity</span><span id="score-commits-val">—</span></div>
+          <div class="bar-track"><div class="bar-fill commits" id="bar-commits"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-header"><span>Community Impact</span><span id="score-impact-val">—</span></div>
+          <div class="bar-track"><div class="bar-fill impact" id="bar-impact"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Languages -->
+    <div class="card fade-up" id="lang-card" style="display:none;">
+      <div class="lang-section">
+        <div class="lang-header">Top Languages</div>
+        <div class="lang-list" id="lang-list"></div>
+      </div>
+    </div>
+
+    <!-- Activity grid -->
+    <div class="card fade-up">
+      <div class="streak-section">
+        <div class="streak-header">
+          <span>Contribution Activity</span>
+          <span id="streak-total">—</span>
+        </div>
+        <div class="streak-grid" id="streak-grid"></div>
+      </div>
+    </div>
+
+    <!-- Grade note -->
+    <div class="fade-up grade-info" id="grade-note"></div>
+
+  </main>
+
+  <script>
+  /* ─────────────────────────────────────────
+     Particle canvas background
+  ───────────────────────────────────────── */
+  (function () {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, pts;
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function init() {
+      pts = Array.from({ length: 80 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: Math.random() * 1.2 + 0.3,
+        a: Math.random(),
+      }));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(88,166,255,${p.a * 0.6})`;
+        ctx.fill();
+
+        for (let j = i + 1; j < pts.length; j++) {
+          const q = pts[j];
+          const dx = p.x - q.x, dy = p.y - q.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(88,166,255,${(1 - dist / 120) * 0.08})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => { resize(); init(); });
+    resize(); init(); draw();
+  })();
+
+  /* ─────────────────────────────────────────
+     Activity grid (synthetic from total count)
+  ───────────────────────────────────────── */
+  function buildGrid(totalContributions) {
+    const grid = document.getElementById('streak-grid');
+    grid.innerHTML = '';
+    const cells = 52 * 7;
+    const density = Math.min(totalContributions / 2000, 1);
+
+    for (let i = 0; i < cells; i++) {
+      const el = document.createElement('div');
+      el.className = 'streak-cell';
+      const r = Math.random();
+      if (r < density * 0.15) el.classList.add('l4');
+      else if (r < density * 0.3) el.classList.add('l3');
+      else if (r < density * 0.5) el.classList.add('l2');
+      else if (r < density * 0.7) el.classList.add('l1');
+      grid.appendChild(el);
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     Rating algorithm
+       score = weighted sum, normalised 0–100
+       A ≥ 85 | B ≥ 65 | C ≥ 45 | D ≥ 25 | E < 25
+  ───────────────────────────────────────── */
+  function calcRating({ repos, stars, followers, gists }) {
+    const repoScore   = Math.min(repos   / 60,  1) * 35;
+    const starScore   = Math.min(stars   / 200, 1) * 30;
+    const follScore   = Math.min(followers / 50, 1) * 20;
+    const gistScore   = Math.min(gists   / 20,  1) * 15;
+    const total = repoScore + starScore + follScore + gistScore;
+
+    let grade, pct;
+    if      (total >= 85) { grade = 'A'; pct = 100; }
+    else if (total >= 65) { grade = 'B'; pct = (total - 65) / 20 * 25 + 75; }
+    else if (total >= 45) { grade = 'C'; pct = (total - 45) / 20 * 25 + 50; }
+    else if (total >= 25) { grade = 'D'; pct = (total - 25) / 20 * 25 + 25; }
+    else                  { grade = 'E'; pct = total / 25 * 25; }
+
+    return { grade, score: Math.round(total), pct: Math.round(pct) };
+  }
+
+  /* ─────────────────────────────────────────
+     Animated number counter
+  ───────────────────────────────────────── */
+  function animateCount(el, target, suffix = '') {
+    const duration = 900, start = performance.now();
+    function step(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ─────────────────────────────────────────
+     GitHub API fetch + render
+  ───────────────────────────────────────── */
+  const USERNAME = 'etsmash';
+
+  async function fetchGitHub() {
+    try {
+      const [userRes, reposRes] = await Promise.all([
+        fetch(`https://api.github.com/users/${USERNAME}`),
+        fetch(`https://api.github.com/users/${USERNAME}/repos?per_page=100&sort=updated`)
+      ]);
+
+      if (!userRes.ok) throw new Error('User fetch failed');
+      const user  = await userRes.json();
+      const repos = reposRes.ok ? await reposRes.json() : [];
+
+      const publicRepos = user.public_repos || 0;
+      const followers   = user.followers    || 0;
+      const following   = user.following    || 0;
+      const gists       = user.public_gists || 0;
+      const stars = Array.isArray(repos)
+        ? repos.reduce((s, r) => s + (r.stargazers_count || 0), 0)
+        : 0;
+
+      /* Languages */
+      const langMap = {};
+      if (Array.isArray(repos)) {
+        repos.forEach(r => { if (r.language) langMap[r.language] = (langMap[r.language] || 0) + 1; });
+      }
+      const topLangs = Object.entries(langMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([l]) => l);
+
+      /* Synthetic commit proxy: use repo count + stars as heuristic */
+      const commitProxy = publicRepos * 22 + stars * 3;
+
+      render({ user, publicRepos, followers, following, gists, stars, topLangs, commitProxy });
+
+    } catch (e) {
+      renderFallback();
+    }
+  }
+
+  function render({ user, publicRepos, followers, following, gists, stars, topLangs, commitProxy }) {
+    /* Avatar & name */
+    const avatarEl = document.getElementById('avatar');
+    avatarEl.src = user.avatar_url || `https://github.com/${USERNAME}.png`;
+    avatarEl.alt = user.login;
+
+    document.getElementById('profile-name').textContent = user.name || user.login;
+    document.getElementById('profile-handle').textContent = `@${user.login}`;
+    if (user.bio) document.getElementById('profile-bio').textContent = user.bio;
+
+    /* Stats */
+    animateCount(document.getElementById('stat-repos'),     publicRepos);
+    animateCount(document.getElementById('stat-stars'),     stars);
+    animateCount(document.getElementById('stat-followers'), followers);
+
+    /* Rating */
+    const { grade, score, pct } = calcRating({ repos: publicRepos, stars, followers, gists });
+    const badge = document.getElementById('rating-badge');
+    badge.textContent = grade;
+    badge.className   = `rating-badge ${grade}`;
+
+    /* Score bars — animate after short delay */
+    const repoBar   = Math.min(publicRepos / 60,  1) * 100;
+    const commitBar = Math.min(commitProxy / 1500, 1) * 100;
+    const impactBar = Math.min((stars + followers * 2) / 300, 1) * 100;
+
+    setTimeout(() => {
+      document.getElementById('bar-repos').style.width   = repoBar   + '%';
+      document.getElementById('bar-commits').style.width = commitBar + '%';
+      document.getElementById('bar-impact').style.width  = impactBar + '%';
+    }, 700);
+
+    document.getElementById('score-repos-val').textContent   = publicRepos + ' repos';
+    document.getElementById('score-commits-val').textContent = Math.round(commitProxy) + ' est.';
+    document.getElementById('score-impact-val').textContent  = stars + ' ★';
+
+    /* Languages */
+    if (topLangs.length) {
+      const langCard = document.getElementById('lang-card');
+      langCard.style.display = '';
+      const list = document.getElementById('lang-list');
+      topLangs.forEach(l => {
+        const pill = document.createElement('span');
+        pill.className = 'lang-pill';
+        pill.textContent = l;
+        list.appendChild(pill);
+      });
+    }
+
+    /* Contribution grid */
+    buildGrid(commitProxy);
+    document.getElementById('streak-total').textContent = `~${Math.round(commitProxy)} contributions`;
+
+    /* Grade note */
+    document.getElementById('grade-note').innerHTML =
+      `Score <span>${score}/100</span> · Grade <span>${grade}</span> · ${publicRepos} repos · ${stars} stars · ${followers} followers`;
+  }
+
+  function renderFallback() {
+    document.getElementById('profile-name').textContent = USERNAME;
+    document.getElementById('profile-handle').textContent = `@${USERNAME}`;
+    document.getElementById('avatar').src = `https://github.com/${USERNAME}.png`;
+
+    const badge = document.getElementById('rating-badge');
+    badge.textContent = '?';
+    badge.style.color = '#6e7f96';
+    badge.style.borderColor = '#6e7f96';
+
+    buildGrid(300);
+    document.getElementById('streak-total').textContent = 'data unavailable';
+    document.getElementById('grade-note').innerHTML = 'Could not load GitHub data — API rate limit may apply.';
+  }
+
+  fetchGitHub();
+  </script>
+</body>
+</html>
